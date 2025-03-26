@@ -1,4 +1,0 @@
-/Users/nirushanayak/dev/PROJECTS/ADS/mongodb-graph-extension/build/CMakeFiles/mongodb-graph-extension.dir
-/Users/nirushanayak/dev/PROJECTS/ADS/mongodb-graph-extension/build/CMakeFiles/path_example.dir
-/Users/nirushanayak/dev/PROJECTS/ADS/mongodb-graph-extension/build/CMakeFiles/edit_cache.dir
-/Users/nirushanayak/dev/PROJECTS/ADS/mongodb-graph-extension/build/CMakeFiles/rebuild_cache.dir
