@@ -33,5 +33,17 @@ Path findBasicPath(
     const std::string& connectFromField,
     int maxDepth);
 
+/**
+ * Find a path between nodes using bidirectional search to improve performance
+ * on large graphs. Searches simultaneously from start node and end node.
+ */
+Path findBidirectionalPathImpl(
+    mongocxx::collection& collection,
+    const bsoncxx::oid& startNodeId,
+    const bsoncxx::oid& endNodeId,
+    const std::string& connectToField,
+    const std::string& connectFromField,
+    int maxDepth);
+
 } // namespace graph_extension
 } // namespace mongo

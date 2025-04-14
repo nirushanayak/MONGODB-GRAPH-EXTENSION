@@ -43,3 +43,17 @@ target_link_libraries(
     mongocxx
     bsoncxx
 )
+
+
+# Build the bidirectional path example
+add_executable(
+    bidirectional_example
+    examples/bidirectional_example.cpp
+)
+
+target_link_libraries(
+    bidirectional_example
+    mongodb-graph-extension
+    mongocxx
+    bsoncxx
+)
