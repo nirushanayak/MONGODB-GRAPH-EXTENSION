@@ -28,6 +28,19 @@ public:
         const std::string& connectToField,
         const std::string& connectFromField,
         int maxDepth = 10);
+        
+    /**
+     * Find paths between nodes using bidirectional search algorithm
+     * This significantly improves performance for large graphs compared to the basic BFS approach
+     */
+    bsoncxx::document::value findBidirectionalPath(
+        const std::string& dbName,
+        const std::string& collectionName,
+        const bsoncxx::oid& startNodeId,
+        const bsoncxx::oid& endNodeId,
+        const std::string& connectToField,
+        const std::string& connectFromField,
+        int maxDepth = 10);
 
 private:
     mongocxx::client& _client;
