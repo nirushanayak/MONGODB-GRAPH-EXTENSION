@@ -1,4 +1,0 @@
-/Users/aditeyavarma/MONGODB-GRAPH-EXTENSION/build/CMakeFiles/mongodb-graph-extension.dir
-/Users/aditeyavarma/MONGODB-GRAPH-EXTENSION/build/CMakeFiles/path_example.dir
-/Users/aditeyavarma/MONGODB-GRAPH-EXTENSION/build/CMakeFiles/edit_cache.dir
-/Users/aditeyavarma/MONGODB-GRAPH-EXTENSION/build/CMakeFiles/rebuild_cache.dir
