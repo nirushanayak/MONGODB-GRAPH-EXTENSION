@@ -23,22 +23,34 @@ struct OidEqual {
 };
 
 bsoncxx::document::value Path::toBSON() const {
-    using namespace bsoncxx::builder::stream;
-    
-    // Create an array of nodes
-    array nodeArray;
-    for (const auto& node : nodes) {
-        nodeArray << bsoncxx::types::b_document{node};
-    }
-    
-    // Build the document
-    document doc;
-    doc << "pathFound" << !nodes.empty()
-        << "depth" << depth
-        << "nodes" << nodeArray
-        << "nodeCount" << static_cast<int32_t>(nodes.size());
-    
-    return doc << finalize;
+        using namespace bsoncxx::builder::stream;
+        
+        // Create an array of nodes
+        array nodeArray;
+        for (const auto& node : nodes) {
+            nodeArray << bsoncxx::types::b_document{node};
+        }
+        
+        // Create an array of edge weights if available
+        array weightArray;
+        for (const auto& weight : edgeWeights) {
+            weightArray << weight;
+        }
+        
+        // Build the document
+        document doc;
+        doc << "pathFound" << !nodes.empty()
+            << "depth" << depth
+            << "nodes" << nodeArray
+            << "nodeCount" << static_cast<int32_t>(nodes.size());
+        
+        // Add weight information if it exists
+        if (!edgeWeights.empty()) {
+            doc << "edgeWeights" << weightArray
+                << "totalWeight" << totalWeight;
+        }
+        
+        return doc << finalize;
 }
 
 Path findBasicPath(
@@ -193,7 +205,87 @@ Path findBasicPath(
     return resultPath;
 }
 
-// Add to your existing path_finding.cpp file
+
+// -- Structs for Weighted Path Finding --
+struct Edge {
+    std::string to;
+    int weight;
+};
+
+struct PathStep {
+    std::string node;
+    int cost;
+    std::vector<std::string> path;
+
+    bool operator>(const PathStep& other) const {
+        return cost > other.cost;
+    }
+};
+
+// -- New Weighted Path Finding (Dijkstra) --
+Path findWeightedPath(
+    const std::string& db_name,
+    const std::string& collection_name,
+    const bsoncxx::oid& start_node,
+    const bsoncxx::oid& end_node,
+    const std::string& connection_field,
+    const std::string& id_field,
+    int max_depth
+) {
+    mongocxx::client client{mongocxx::uri{}};
+    auto db = client[db_name];
+    auto edges = db[collection_name];
+
+    // Load graph into memory
+    std::unordered_map<std::string, std::vector<Edge>> graph;
+    for (auto&& doc : edges.find({})) {
+        std::string from = std::string(doc["from"].get_string().value);
+        std::string to = std::string(doc["to"].get_string().value);
+        int weight = doc["weight"].get_int32();
+        graph[from].push_back({to, weight});
+    }
+
+    std::priority_queue<PathStep, std::vector<PathStep>, std::greater<>> pq;
+    std::unordered_map<std::string, int> visited;
+
+    std::string start_id = start_node.to_string();
+    std::string end_id = end_node.to_string();
+
+    pq.push({start_id, 0, {start_id}});
+
+    while (!pq.empty()) {
+        auto current = pq.top(); pq.pop();
+
+        if (visited.count(current.node)) continue;
+        visited[current.node] = current.cost;
+
+        if (current.node == end_id) {
+            Path result;
+            result.found = true;
+            for (const auto& node : current.path) {
+                result.nodes.push_back(node);
+            }
+            result.depth = current.path.size() - 1;
+            result.cost = current.cost;
+            return result;
+        }
+
+        if (current.path.size() > (size_t)max_depth) continue;
+
+        for (const auto& edge : graph[current.node]) {
+            if (!visited.count(edge.to)) {
+                auto newPath = current.path;
+                newPath.push_back(edge.to);
+                pq.push({edge.to, current.cost + edge.weight, newPath});
+            }
+        }
+    }
+
+    // No path found
+    Path empty_result;
+    empty_result.found = false;
+    return empty_result;
+}
 
 /**
  * Bidirectional Search Implementation

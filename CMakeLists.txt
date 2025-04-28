@@ -51,6 +51,19 @@ target_link_libraries(
     bsoncxx
 )
 
+# Add the weighted path test
+add_executable(
+    weighted_path_example
+    examples/weighted_path_example.cpp
+)
+
+target_link_libraries(
+    weighted_path_example
+    mongodb-graph-extension
+    mongocxx
+    bsoncxx
+)
+
 
 # Build the bidirectional path example
 add_executable(

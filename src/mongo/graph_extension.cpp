@@ -32,6 +32,22 @@ bsoncxx::document::value GraphExtension::findPath(
     return path.toBSON();
 }
 
+
+bsoncxx::document::value GraphExtension::findWeightedPath(
+    const std::string& db_name,
+    const std::string& collection_name,
+    const bsoncxx::oid& start,
+    const bsoncxx::oid& end,
+    const std::string& connect_field,
+    const std::string& id_field,
+    const std::string& weight_field,
+    int max_depth
+) {
+    auto db = _client[db_name];
+    auto collection = db[collection_name];
+    return path_finding::findWeightedPathImpl(collection, start, end, connect_field, id_field, weight_field, max_depth);
+}
+
 bsoncxx::document::value GraphExtension::findBidirectionalPath(
     const std::string& dbName,
     const std::string& collectionName,

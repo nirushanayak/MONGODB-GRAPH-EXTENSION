@@ -28,7 +28,17 @@ public:
         const std::string& connectToField,
         const std::string& connectFromField,
         int maxDepth = 10);
-        
+
+    bsoncxx::document::value findWeightedPath(
+        const std::string& db_name,
+        const std::string& collection_name,
+        const bsoncxx::oid& start,
+        const bsoncxx::oid& end,
+        const std::string& connect_field,
+        const std::string& id_field,
+        const std::string& weight_field,
+        int max_depth
+    );
     /**
      * Find paths between nodes using bidirectional search algorithm
      * This significantly improves performance for large graphs compared to the basic BFS approach
