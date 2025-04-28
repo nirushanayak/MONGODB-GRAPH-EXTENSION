@@ -32,8 +32,8 @@ public:
     bsoncxx::document::value findWeightedPath(
         const std::string& db_name,
         const std::string& collection_name,
-        const bsoncxx::oid& start,
-        const bsoncxx::oid& end,
+        const std::string& start,
+        const std::string& end,
         const std::string& connect_field,
         const std::string& id_field,
         const std::string& weight_field,

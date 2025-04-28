@@ -11,7 +11,7 @@ MONGO_URI = "mongodb://localhost:27017"
 GRAPH_DB = "graph"
 EDGE_COLLECTION = "edges"
 # SAMPLE_NODES = [("N0", "N999"), ("N10000", "N11000"), ("N12345", "N54321")]
-with open("data/sample_pairs.json") as f:
+with open("/Users/nirushanayak/dev/PROJECTS/ADS/mongodb-graph-extension/data/sample_pairs.json") as f:
     SAMPLE_NODES = json.load(f)
 
 # --- MongoDB Setup ---

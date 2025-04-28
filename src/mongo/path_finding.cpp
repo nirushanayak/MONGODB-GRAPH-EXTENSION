@@ -4,6 +4,11 @@
 #include <unordered_set>
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/builder/stream/array.hpp>
+#include <mongocxx/client.hpp>
+#include <mongocxx/uri.hpp>
+
+using bsoncxx::builder::stream::document;
+using bsoncxx::builder::stream::finalize;
 
 namespace mongo {
 namespace graph_extension {
@@ -206,7 +211,6 @@ Path findBasicPath(
 }
 
 
-// -- Structs for Weighted Path Finding --
 struct Edge {
     std::string to;
     int weight;
@@ -222,36 +226,33 @@ struct PathStep {
     }
 };
 
-// -- New Weighted Path Finding (Dijkstra) --
-Path findWeightedPath(
-    const std::string& db_name,
-    const std::string& collection_name,
-    const bsoncxx::oid& start_node,
-    const bsoncxx::oid& end_node,
-    const std::string& connection_field,
+
+Path findWeightedPathImpl(
+    mongocxx::collection& collection,
+    const std::string& start,
+    const std::string& end,
+    const std::string& connect_field,
     const std::string& id_field,
+    const std::string& weight_field,
     int max_depth
 ) {
-    mongocxx::client client{mongocxx::uri{}};
-    auto db = client[db_name];
-    auto edges = db[collection_name];
+    Path result;
 
-    // Load graph into memory
+    // --- Build graph in memory ---
     std::unordered_map<std::string, std::vector<Edge>> graph;
-    for (auto&& doc : edges.find({})) {
+    for (auto&& doc : collection.find({})) {
         std::string from = std::string(doc["from"].get_string().value);
         std::string to = std::string(doc["to"].get_string().value);
         int weight = doc["weight"].get_int32();
+
         graph[from].push_back({to, weight});
     }
 
+    // --- Dijkstra-like search ---
     std::priority_queue<PathStep, std::vector<PathStep>, std::greater<>> pq;
     std::unordered_map<std::string, int> visited;
 
-    std::string start_id = start_node.to_string();
-    std::string end_id = end_node.to_string();
-
-    pq.push({start_id, 0, {start_id}});
+    pq.push({start, 0, {start}});
 
     while (!pq.empty()) {
         auto current = pq.top(); pq.pop();
@@ -259,18 +260,18 @@ Path findWeightedPath(
         if (visited.count(current.node)) continue;
         visited[current.node] = current.cost;
 
-        if (current.node == end_id) {
-            Path result;
+        if (current.node == end) {
             result.found = true;
             for (const auto& node : current.path) {
-                result.nodes.push_back(node);
+                auto node_doc = document{} << "nodeId" << node << finalize;
+                result.nodes.push_back(bsoncxx::document::value(node_doc));
             }
             result.depth = current.path.size() - 1;
             result.cost = current.cost;
             return result;
         }
 
-        if (current.path.size() > (size_t)max_depth) continue;
+        if (current.path.size() > static_cast<size_t>(max_depth)) continue;
 
         for (const auto& edge : graph[current.node]) {
             if (!visited.count(edge.to)) {
@@ -282,9 +283,8 @@ Path findWeightedPath(
     }
 
     // No path found
-    Path empty_result;
-    empty_result.found = false;
-    return empty_result;
+    result.found = false;
+    return result;
 }
 
 /**
